@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bootes Monitoring System</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --gradient-dark: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      --text-light: #f9fafb;
+      --accent-teal: #0d9488;
+      --card-shadow: 0 6px 30px rgba(31, 41, 55, 0.08);
+    }
+
+    /* base */
+    html,
+    body {
+      height: 100%;
+      box-sizing: border-box
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f9fafb;
+      color: #374151;
+      overflow-x: hidden;
+      transition: background .25s, color .25s;
+    }
+
+    body.sidebar-open {
+      overflow: hidden;
+      position: fixed;
+      width: 100%
+    }
+
+    body.dark-mode {
+      background: #0f1720;
+      color: #cbd5e1
+    }
+
+    /* sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100vh;
+      background: var(--gradient-dark);
+      color: var(--text-light);
+      padding: 20px 0;
+      box-shadow: 5px 0 15px rgba(31, 41, 55, 0.28);
+      z-index: 1000;
+      transition: transform .28s ease, width .28s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      text-align: center;
+      margin-bottom: 14px;
+      padding: 10px 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .sidebar .logo {
+      height: 82px;
+      width: 82px;
+      margin-bottom: 8px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.20);
+      object-fit: contain;
+    }
+
+    .sidebar-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0;
+      color: var(--text-light);
+      text-align: center
+    }
+
+    /* project selector + nav */
+    .project-selector {
+      padding: 0 14px;
+      margin-bottom: 10px
+    }
+
+    .project-selector label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-light);
+      font-size: .9rem
+    }
+
+    /* project selector styling: dark closed, readable open options */
+    .project-selector select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text-light);
+      font-size: .95rem;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    /* make native options readable when dropdown opens */
+    .project-selector select option {
+      background: #ffffff;
+      /* white background for options */
+      color: #111827;
+      /* dark text for options */
+    }
+
+    /* increase stacking so dropdown isn't clipped */
+    .project-selector select:focus {
+      position: relative;
+      z-index: 2500;
+    }
+
+    /* optional: force dropdown arrow color */
+    .project-selector select::-ms-expand {
+      display: none;
+    }
+
+    .nav-main {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 8px
+    }
+
+    .nav-main ul {
+      list-style: none;
+      padding: 0 6px;
+      margin: 0
+    }
+
+    .nav-main li {
+      margin-bottom: 6px
+    }
+
+    .nav-main a {
+      display: flex;
+      align-items: center;
+      color: var(--text-light) !important;
+      padding: 12px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all .18s;
+      font-weight: 500;
+      gap: 10px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .nav-main a:hover,
+    .nav-main a.active {
+      background: rgba(13, 148, 136, 0.12);
+      color: var(--accent-teal) !important;
+      border-left: 4px solid var(--accent-teal);
+    }
+
+    .nav-main i {
+      width: 22px;
+      margin-right: 10px;
+      text-align: center;
+      font-size: 18px
+    }
+
+    /* footer */
+    .sidebar-footer {
+      padding: 12px 0 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04)
+    }
+
+    .dark-toggle {
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: block;
+      margin: 0 auto
+    }
+
+    /* collapsed */
+    .sidebar.collapsed {
+      width: 64px !important;
+      overflow: visible
+    }
+
+    .sidebar.collapsed .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      margin-bottom: 6px
+    }
+
+    .sidebar.collapsed .sidebar-title,
+    .sidebar.collapsed .project-selector {
+      display: none !important
+    }
+
+    .sidebar.collapsed .nav-main {
+      overflow: hidden !important;
+      height: auto
+    }
+
+    .sidebar.collapsed .nav-main::-webkit-scrollbar {
+      display: none
+    }
+
+    .sidebar.collapsed .nav-main a {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+      font-size: 0
+    }
+
+    .sidebar.collapsed .nav-main a i {
+      font-size: 18px;
+      margin-right: 0;
+      display: inline-block
+    }
+
+    .sidebar.collapsed .sidebar-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    /* main content */
+    .main-content {
+      margin-left: 280px;
+      min-height: 100vh;
+      padding: 20px;
+      transition: margin-left .28s ease, padding .28s
+    }
+
+    .main-content.sidebar-collapsed {
+      margin-left: 64px
+    }
+
+    /* tab content size responsive: will expand when sidebar collapses */
+    .tab-content {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 20px;
+      max-width: calc(100% - 60px);
+      transition: max-width .28s ease;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .main-content.sidebar-collapsed .tab-content {
+      max-width: calc(100% - 40px);
+    }
+
+    /* hero */
+    .dashboard-hero {
+      background: var(--gradient-dark);
+      color: var(--text-light);
+      padding: 30px;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(31, 41, 55, 0.25)
+    }
+
+    #heroTitle {
+      margin: 0;
+      font-size: 2.2rem;
+      font-weight: 700
+    }
+
+    /* tab-pane heading */
+    .tab-pane h2 {
+      color: #0b1220;
+      font-weight: 700;
+      border-bottom: 3px solid var(--accent-teal);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center
+    }
+
+    .tab-pane h2 i {
+      margin-right: 10px
+    }
+
+    /* dark mode adjustments for tab content / heading */
+    body.dark-mode .tab-content {
+      background: #0f1720;
+      color: #cbd5e1;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55)
+    }
+
+    body.dark-mode .tab-pane h2 {
+      color: #e6eef8;
+      border-bottom: 3px solid rgba(13, 148, 136, 0.6)
+    }
+
+    body.dark-mode .tab-pane h2 i {
+      color: #e6eef8
+    }
+
+    /* small screens & overlay */
+    .main-content::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 990;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .28s, visibility .28s
+    }
+
+    body.sidebar-open .main-content::before {
+      opacity: 1;
+      visibility: visible
+    }
+
+    .toggle-btn {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1001;
+      background: var(--gradient-dark);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 1.2em;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      align-items: center;
+      justify-content: center
+    }
+
+    /* bottom-left arrow (floating) - left set by JS */
+    .sidebar-toggle-bottom {
+      position: fixed;
+      bottom: 20px;
+      z-index: 1100;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gradient-dark);
+      color: white;
+      border: none;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: left .28s ease, transform .12s ease;
+    }
+
+    .sidebar-toggle-bottom:active {
+      transform: scale(.98)
+    }
+
+    .sidebar-toggle-bottom .fa-chevron-left,
+    .sidebar-toggle-bottom .fa-chevron-right {
+      font-size: 1.05rem
+    }
+
+    /* responsive rules */
+    @media (max-width:768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        width: 280px
+      }
+
+      .sidebar.open {
+        transform: translateX(0)
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 12px
+      }
+
+      .tab-content {
+        padding: 20px
+      }
+
+      .toggle-btn {
+        display: flex
+      }
+
+      .sidebar.collapsed {
+        width: 280px
+      }
+
+      .main-content.sidebar-collapsed {
+        margin-left: 0
+      }
+
+      .tab-content {
+        max-width: calc(100% - 48px)
+      }
+
+      .main-content.sidebar-collapsed .tab-content {
+        max-width: calc(100% - 48px)
+      }
+
+      /* MOBILE FIX: नीचे वाले arrow button को छुपाना */
+      .sidebar-toggle-bottom {
+        display: none;
+      }
+    }
+
+    /* small visual tweaks for project cards inside tab */
+    .bg-light {
+      background: #f3f6f7 !important
+    }
+
+    body.dark-mode .bg-light {
+      background: #253038 !important
+    }
+  </style>
+</head>
+
+<body>
+  <!-- top hamburger mobile -->
+  <button id="toggleBtn" class="toggle-btn" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+
+  <aside id="sidebar" class="sidebar" role="navigation" aria-label="Main sidebar">
+    <div class="sidebar-header">
+      <img src="Bootes Logo.png" alt="Bootes Logo" class="logo">
+      <div class="sidebar-title">Bootes Monitoring System</div>
+    </div>
+
+    <div class="project-selector">
+      <label for="projectSelect">Select Project</label>
+      <select id="projectSelect" aria-label="Select Project">
+        <option>GDLV</option>
+        <option>KPS</option>
+        <option>HIH</option>
+        <option>B-47</option>
+        <option>SLH</option>
+      </select>
+    </div>
+
+    <nav class="nav-main" aria-label="Primary">
+      <ul>
+        <li><a href="#" class="active" data-tab="projectinfo" role="button" aria-controls="projectinfo"
+            aria-selected="true"><i class="fas fa-info-circle"></i><span>Project Info</span></a></li>
+        <li><a href="#" data-tab="workactivity" role="button" aria-controls="workactivity"><i
+              class="fas fa-tasks"></i><span>Work Activity</span></a></li>
+        <li><a href="#" data-tab="manpower" role="button" aria-controls="manpower"><i
+              class="fas fa-users"></i><span>Manpower</span></a></li>
+        <li><a href="#" data-tab="staff" role="button" aria-controls="staff"><i
+              class="fas fa-user-check"></i><span>Staff Record</span></a></li>
+        <li><a href="#" data-tab="materialreceived" role="button" aria-controls="materialreceived"><i
+              class="fas fa-truck-loading"></i><span>Material Received</span></a></li>
+        <li><a href="#" data-tab="materialconsumption" role="button" aria-controls="materialconsumption"><i
+              class="fas fa-chart-bar"></i><span>Material Consumption</span></a></li>
+        <li><a href="#" data-tab="images" role="button" aria-controls="images"><i
+              class="fas fa-images"></i><span>Images</span></a></li>
+        <li><a href="#" data-tab="compare" role="button" aria-controls="compare"><i
+              class="fas fa-exchange-alt"></i><span>Compare Images</span></a></li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode"><i id="darkIcon" class="fas fa-moon"
+          aria-hidden="true"></i></button>
+    </div>
+  </aside>
+
+  <!-- floating bottom arrow (positioned by JS) -->
+  <button id="sidebarToggleBtn" class="sidebar-toggle-bottom" aria-label="Open or close sidebar">
+    <i id="sidebarToggleIcon" class="fas fa-chevron-left" aria-hidden="true"></i>
+  </button>
+
+  <main id="mainContent" class="main-content">
+    <section class="dashboard-hero" data-aos="fade-down">
+      <h1 id="heroTitle">Welcome to GDLV Project</h1>
+    </section>
+
+    <div class="tab-content">
+      <div id="projectinfo" class="tab-pane show active" role="tabpanel">
+        <h2><i class="fas fa-info-circle"></i> Project Info</h2>
+        <p>Detailed project information, timelines, and key metrics.</p>
+
+        <div class="row mt-4">
+          <div class="col-md-6 col-12 mb-3">
+            <div class="bg-light p-3 rounded" style="height:200px;">Project Timeline</div>
+          </div>
+          <div class="col-md-6 col-12 mb-3">
+            <div class="bg-light p-3 rounded" style="height:200px;">Key Contacts</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="workactivity" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-tasks"></i> Work Activity</h2>
+        <p>Advanced analytics and visualizations for daily work tracking.</p>
+      </div>
+
+      <div id="manpower" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-users"></i> Manpower</h2>
+        <p>Manpower details and attendance.</p>
+      </div>
+
+      <div id="staff" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-user-check"></i> Staff</h2>
+        <p>Staff records.</p>
+      </div>
+
+      <div id="materialreceived" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-truck-loading"></i> Material Received</h2>
+        <p>Received materials.</p>
+      </div>
+
+      <div id="materialconsumption" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-chart-bar"></i> Material Consumption</h2>
+
+        <div class="row mb-4">
+          <div class="col-lg-4 col-md-6 col-12">
+            <label for="materialSelect" class="form-label fw-bold">Select Material</label>
+            <select id="materialSelect" class="form-select" aria-label="Select Material for Consumption Data">
+              <option selected>TMT Steel</option>
+              <option>RMC</option>
+              <option>Cement</option>
+              <option>Aggregate</option>
+              <option>Sand</option>
+              <option>Binding Wire</option>
+              <option>Bricks</option>
+              <option>Diesel</option>
+              <option>AAC Block</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row mb-5">
+          <div class="col-xl-3 col-md-6 mb-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="card shadow-sm border-start border-primary border-5 h-100">
+              <div class="card-body">
+                <h6 class="text-primary text-uppercase fw-bold mb-1">Total Received</h6>
+                <div class="h5 mb-0 fw-bold text-gray-800" id="totalReceived">0.00 MT</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-3 col-md-6 mb-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="card shadow-sm border-start border-success border-5 h-100">
+              <div class="card-body">
+                <h6 class="text-success text-uppercase fw-bold mb-1">Total Consumption</h6>
+                <div class="h5 mb-0 fw-bold text-gray-800" id="totalConsumption">0.00 MT</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-3 col-md-6 mb-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="card shadow-sm border-start border-warning border-5 h-100">
+              <div class="card-body">
+                <h6 class="text-warning text-uppercase fw-bold mb-1">Balance Stock</h6>
+                <div class="h5 mb-0 fw-bold text-gray-800" id="balanceStock">0.00 MT</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-3 col-md-6 mb-3" data-aos="fade-up" data-aos-delay="400">
+            <div class="card shadow-sm border-start border-danger border-5 h-100">
+              <div class="card-body">
+                <h6 class="text-danger text-uppercase fw-bold mb-1">Total Cost</h6>
+                <div class="h5 mb-0 fw-bold text-gray-800" id="totalCost">₹ 0.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p>Material consumption analytics.</p>
+        <div class="bg-light p-3 rounded" style="min-height:300px;">
+          Consumption Data Visualization for <span id="currentMaterial">TMT Steel</span>
+        </div>
+      </div>
+
+
+      <div id="images" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-images"></i> Images</h2>
+        <p>Image gallery & uploads.</p>
+      </div>
+
+      <div id="compare" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-exchange-alt"></i> Compare Images</h2>
+        <p>Image comparison tool.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+
+  <script>
+    AOS.init({ duration: 800, once: true });
+
+    // elements
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const bottomToggle = document.getElementById('sidebarToggleBtn');
+    const bottomIcon = document.getElementById('sidebarToggleIcon');
+    const topToggle = document.getElementById('toggleBtn');
+    const projectSelect = document.getElementById('projectSelect');
+    const heroTitle = document.getElementById('heroTitle');
+    const darkToggle = document.getElementById('darkToggle');
+    const darkIcon = document.getElementById('darkIcon');
+
+    const navLinks = document.querySelectorAll('.nav-main a');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    // helpers for positions
+    function setBottomTogglePosition() {
+      const w = window.innerWidth;
+      if (w <= 768) {
+        bottomToggle.style.left = '20px';
+        return;
+      }
+      if (sidebar.classList.contains('collapsed')) {
+        bottomToggle.style.left = '72px';
+      } else {
+        bottomToggle.style.left = '284px';
+      }
+    }
+
+    // update bottom icon
+    function updateBottomIcon() {
+      const w = window.innerWidth;
+      if (w <= 768) {
+        bottomIcon.className = sidebar.classList.contains('open') ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+        return;
+      }
+      bottomIcon.className = sidebar.classList.contains('collapsed') ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+    }
+
+    // toggle sidebar (mobile slide, desktop collapse)
+    function toggleSidebar(forceClose) {
+      const w = window.innerWidth;
+      const isOpen = sidebar.classList.contains('open');
+      const isCollapsed = sidebar.classList.contains('collapsed');
+
+      if (w <= 768) {
+        if (forceClose === false || isOpen) {
+          sidebar.classList.remove('open');
+          document.body.classList.remove('sidebar-open');
+        } else {
+          sidebar.classList.add('open');
+          document.body.classList.add('sidebar-open');
+        }
+        sidebar.classList.remove('collapsed');
+        mainContent.classList.remove('sidebar-collapsed');
+        setBottomTogglePosition();
+        updateBottomIcon();
+        return;
+      }
+
+      if (forceClose === false) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('sidebar-collapsed');
+      } else {
+        if (isCollapsed) {
+          sidebar.classList.remove('collapsed');
+          mainContent.classList.remove('sidebar-collapsed');
+        } else {
+          sidebar.classList.add('collapsed');
+          mainContent.classList.add('sidebar-collapsed');
+        }
+      }
+
+      setBottomTogglePosition();
+      updateBottomIcon();
+      initTooltips();
+    }
+
+    // close mobile
+    function closeMobileSidebar() {
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        document.body.classList.remove('sidebar-open');
+      }
+      setBottomTogglePosition();
+      updateBottomIcon();
+      initTooltips();
+    }
+
+    // clicking outside closes mobile sidebar
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open') &&
+        e.target.closest('#sidebar') === null && e.target.closest('#toggleBtn') === null && e.target.closest('#sidebarToggleBtn') === null) {
+        closeMobileSidebar();
+      }
+    });
+
+    // escape key closes mobile
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMobileSidebar();
+    });
+
+    // keep consistent on resize
+    window.addEventListener('resize', () => {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('collapsed');
+        mainContent.classList.remove('sidebar-collapsed');
+      } else {
+        sidebar.classList.remove('open');
+        document.body.classList.remove('sidebar-open');
+      }
+      setBottomTogglePosition();
+      updateBottomIcon();
+      initTooltips();
+    });
+
+    // bottom toggle click
+    bottomToggle.addEventListener('click', () => toggleSidebar());
+
+    // top toggle (mobile)
+    topToggle && topToggle.addEventListener('click', () => toggleSidebar());
+
+    // init position/icon
+    setBottomTogglePosition();
+    updateBottomIcon();
+
+    /* -------------------------
+       NAV LINK: switching tabs
+       ------------------------- */
+    function activateTab(tabId, clickedLink) {
+      navLinks.forEach(a => {
+        a.classList.remove('active');
+        a.setAttribute('aria-selected', 'false');
+      });
+      if (clickedLink) {
+        clickedLink.classList.add('active');
+        clickedLink.setAttribute('aria-selected', 'true');
+      }
+      tabPanes.forEach(p => {
+        p.classList.remove('show', 'active');
+      });
+      const target = document.getElementById(tabId);
+      if (target) {
+        target.classList.add('show', 'active');
+      }
+    }
+
+    navLinks.forEach(link => {
+      const labelSpan = link.querySelector('span');
+      if (labelSpan) {
+        const txt = labelSpan.textContent.trim();
+        link.setAttribute('title', txt);
+        link.setAttribute('data-bs-toggle', 'tooltip');
+        link.setAttribute('data-bs-placement', 'right');
+      }
+
+      link.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        const tab = link.getAttribute('data-tab');
+        if (!tab) return;
+        activateTab(tab, link);
+        if (window.innerWidth <= 768) {
+          sidebar.classList.remove('open');
+          document.body.classList.remove('sidebar-open');
+        }
+      });
+
+      link.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          link.click();
+        }
+      });
+    });
+
+    /* -------------------------
+       Tooltips for collapsed state
+       ------------------------- */
+    let tooltipInstances = [];
+    function initTooltips() {
+      tooltipInstances.forEach(inst => inst.dispose && inst.dispose());
+      tooltipInstances = [];
+
+      const enableTooltip = sidebar.classList.contains('collapsed') && window.innerWidth > 768;
+
+      navLinks.forEach(link => {
+        if (enableTooltip) {
+          const tip = new bootstrap.Tooltip(link, { container: 'body' });
+          tooltipInstances.push(tip);
+        } else {
+          const prev = bootstrap.Tooltip.getInstance(link);
+          if (prev) prev.dispose();
+        }
+      });
+    }
+    initTooltips();
+
+    /* -------------------------
+       PROJECT SELECT: only update HERO
+       ------------------------- */
+    projectSelect.addEventListener('change', (e) => {
+      const pr = e.target.value;
+      heroTitle.textContent = `Welcome to ${pr} Project`;
+      // Note: We intentionally DO NOT update tab headings here so they stay static
+    });
+
+    /* -------------------------
+       DARK THEME STORAGE
+       ------------------------- */
+    darkToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        darkIcon.classList.remove('fa-moon'); darkIcon.classList.add('fa-sun');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        darkIcon.classList.remove('fa-sun'); darkIcon.classList.add('fa-moon');
+        localStorage.setItem('theme', 'light');
+      }
+    });
+    (function () {
+      if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        darkIcon.classList.remove('fa-moon'); darkIcon.classList.add('fa-sun');
+      }
+    })();
+
+    
+  </script>
+</body>
+
+</html>
