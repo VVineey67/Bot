@@ -191,19 +191,26 @@
     /* footer */
     .sidebar-footer {
       padding: 12px 0 18px;
-      border-top: 1px solid rgba(255, 255, 255, 0.04)
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .dark-toggle {
-      background: rgba(255, 255, 255, 0.12);
-      border: none;
-      color: white;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
-      display: block;
-      margin: 0 auto
+    .user-info {
+      text-align: center;
+      color: var(--text-light);
+    }
+
+    .user-info p {
+      margin: 0 0 8px 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .user-info button {
+      width: 100%;
+      font-size: 0.85rem;
     }
 
     /* collapsed */
@@ -252,6 +259,10 @@
       justify-content: center
     }
 
+    .sidebar.collapsed .user-info {
+      display: none;
+    }
+
     /* main content */
     .main-content {
       margin-left: 280px;
@@ -275,6 +286,7 @@
       transition: max-width .28s ease;
       margin-left: auto;
       margin-right: auto;
+      position: relative;
     }
 
     .main-content.sidebar-collapsed .tab-content {
@@ -449,6 +461,65 @@
     body.dark-mode .bg-light {
       background: #253038 !important
     }
+
+    /* Loading overlay for tab refresh */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .loading-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    body.dark-mode .loading-overlay {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .refresh-spinner {
+      width: 80px;
+      height: 80px;
+      border: 6px solid var(--accent-teal);
+      border-top: 6px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      position: relative;
+    }
+
+    .refresh-spinner::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      background: var(--accent-teal);
+      border-radius: 50%;
+      animation: pulse 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.2); opacity: 0.7; }
+    }
   </style>
 </head>
 
@@ -463,22 +534,34 @@
     </div>
 
     <div class="project-selector">
-      <label for="projectSelect">Select Project</label>
-      <select id="projectSelect" aria-label="Select Project">
+   
+      <select id="projectSelect" aria-label="Search Site">
+        <option value="">Search Site </option>
         <option>GDLV</option>
-        <option>KPS</option>
+        <option>HKD</option>
         <option>HIH</option>
         <option>B-47</option>
         <option>SLH</option>
+        <option>RWH</option>
+        <option>RSTF</option>
+        <option>JEX</option>
+        <option>SBGM</option>
+        <option>VRI</option>
+        <option>JANPURAEXT</option>
+        <option>NBCCARAVAL</option>
       </select>
     </div>
 
     <nav class="nav-main" aria-label="Primary">
       <ul>
-        <li><a href="#" class="active" data-tab="projectinfo" role="button" aria-controls="projectinfo"
-            aria-selected="true"><i class="fas fa-info-circle"></i><span>Project Info</span></a></li>
+        <li><a href="#" class="active" data-tab="home" role="button" aria-controls="home"
+            aria-selected="true"><i class="fas fa-home"></i><span>Home</span></a></li>
+        <li><a href="#" data-tab="projectinfo" role="button" aria-controls="projectinfo"
+            aria-selected="false"><i class="fas fa-info-circle"></i><span>Project Info</span></a></li>
         <li><a href="#" data-tab="workactivity" role="button" aria-controls="workactivity"><i
               class="fas fa-tasks"></i><span>Work Activity</span></a></li>
+        <li><a href="#" data-tab="finance" role="button" aria-controls="finance"><i
+              class="fas fa-dollar-sign"></i><span>Finance</span></a></li>
         <li><a href="#" data-tab="manpower" role="button" aria-controls="manpower"><i
               class="fas fa-users"></i><span>Manpower</span></a></li>
         <li><a href="#" data-tab="staff" role="button" aria-controls="staff"><i
@@ -495,6 +578,10 @@
     </nav>
 
     <div class="sidebar-footer">
+      <div class="user-info">
+        <p>Welcome, Rohan</p>
+        <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
+      </div>
       <button id="darkToggle" class="dark-toggle" aria-label="Toggle dark mode"><i id="darkIcon" class="fas fa-moon"
           aria-hidden="true"></i></button>
     </div>
@@ -506,28 +593,347 @@
   </button>
 
   <main id="mainContent" class="main-content">
-    <section class="dashboard-hero" data-aos="fade-down">
-      <h1 id="heroTitle">Welcome to GDLV Project</h1>
-    </section>
-
     <div class="tab-content">
-      <div id="projectinfo" class="tab-pane show active" role="tabpanel">
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="refresh-spinner"></div>
+      </div>
+      <div id="home" class="tab-pane show active" role="tabpanel">
+       
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <h3 class="alert-heading"><i class="fas fa-building me-2"></i>Welcome to Bootes Impex Tech Ltd</h3>
+        
+        </div>
+      </div>
+      <div id="projectinfo" class="tab-pane fade" role="tabpanel">
         <h2><i class="fas fa-info-circle"></i> Project Info</h2>
-        <p>Detailed project information, timelines, and key metrics.</p>
-
-        <div class="row mt-4">
-          <div class="col-md-6 col-12 mb-3">
-            <div class="bg-light p-3 rounded" style="height:200px;">Project Timeline</div>
+        
+        <!-- Sub-tabs for Project Info -->
+        <ul class="nav nav-tabs" id="projectInfoTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="projectName-tab" data-bs-toggle="tab" data-bs-target="#projectName" type="button" role="tab" aria-controls="projectName" aria-selected="true">
+              <i class="fas fa-building"></i> Project Name
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="projectLocation-tab" data-bs-toggle="tab" data-bs-target="#projectLocation" type="button" role="tab" aria-controls="projectLocation" aria-selected="false">
+              <i class="fas fa-map-marker-alt"></i> Project Location
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="projectBid-tab" data-bs-toggle="tab" data-bs-target="#projectBid" type="button" role="tab" aria-controls="projectBid" aria-selected="false">
+              <i class="fas fa-money-bill-wave"></i> Project Bid
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="startingDate-tab" data-bs-toggle="tab" data-bs-target="#startingDate" type="button" role="tab" aria-controls="startingDate" aria-selected="false">
+              <i class="fas fa-calendar-plus"></i> Starting Date
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="endingDate-tab" data-bs-toggle="tab" data-bs-target="#endingDate" type="button" role="tab" aria-controls="endingDate" aria-selected="false">
+              <i class="fas fa-calendar-check"></i> Ending Date
+            </button>
+          </li>
+        </ul>
+        
+        <div class="tab-content" id="projectInfoTabsContent">
+          <div class="tab-pane fade show active" id="projectName" role="tabpanel" aria-labelledby="projectName-tab">
+            <div class="card border-primary shadow-sm mt-3">
+              <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-building"></i> Project Name</h5>
+              </div>
+              <div class="card-body">
+                <p class="h4 text-primary">GDLV Project</p>
+                <p class="text-muted">This is the current selected project name. It updates based on the project selector.</p>
+              </div>
+            </div>
           </div>
-          <div class="col-md-6 col-12 mb-3">
-            <div class="bg-light p-3 rounded" style="height:200px;">Key Contacts</div>
+          
+          <div class="tab-pane fade" id="projectLocation" role="tabpanel" aria-labelledby="projectLocation-tab">
+            <div class="card border-success shadow-sm mt-3">
+              <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-map-marker-alt"></i> Project Location</h5>
+              </div>
+              <div class="card-body">
+                <p class="h5 text-success">Location: Mumbai, Maharashtra</p>
+                <div class="embed-responsive embed-responsive-16by9">
+                  <iframe class="embed-responsive-item" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3770.972!2d72.8777!3d19.0760!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c6306644edc1%3A0x5da4ed8f8d648c69!2sMumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="projectBid" role="tabpanel" aria-labelledby="projectBid-tab">
+            <div class="card border-warning shadow-sm mt-3">
+              <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0"><i class="fas fa-money-bill-wave"></i> Project Bid</h5>
+              </div>
+              <div class="card-body">
+                <p class="h4 text-warning">Bid Amount: ₹ 50,00,000</p>
+                <div class="progress mt-3" style="height: 20px;">
+                  <div class="progress-bar bg-warning" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">75% Funded</div>
+                </div>
+                <p class="mt-2 text-muted">Project bid details and funding status.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="startingDate" role="tabpanel" aria-labelledby="startingDate-tab">
+            <div class="card border-info shadow-sm mt-3">
+              <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-calendar-plus"></i> Starting Date</h5>
+              </div>
+              <div class="card-body">
+                <p class="h5 text-info">Start Date: January 1, 2024</p>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> The project commenced on this date. All timelines are calculated from here.
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="endingDate" role="tabpanel" aria-labelledby="endingDate-tab">
+            <div class="card border-danger shadow-sm mt-3">
+              <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-calendar-check"></i> Ending Date</h5>
+              </div>
+              <div class="card-body">
+                <p class="h5 text-danger">End Date: December 31, 2025</p>
+                <div class="alert alert-danger">
+                  <i class="fas fa-exclamation-triangle"></i> Project deadline. Ensure all milestones are met by this date.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="workactivity" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-tasks"></i> Work Activity</h2>
+        
+        <!-- Sub-tabs for Work Activity -->
+        <ul class="nav nav-tabs" id="workActivityTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="currentWork-tab" data-bs-toggle="tab" data-bs-target="#currentWork" type="button" role="tab" aria-controls="currentWork" aria-selected="true">
+              <i class="fas fa-cogs"></i> Current Work
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="sitePlan-tab" data-bs-toggle="tab" data-bs-target="#sitePlan" type="button" role="tab" aria-controls="sitePlan" aria-selected="false">
+              <i class="fas fa-map"></i> Site Plan
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="mspPlan-tab" data-bs-toggle="tab" data-bs-target="#mspPlan" type="button" role="tab" aria-controls="mspPlan" aria-selected="false">
+              <i class="fas fa-project-diagram"></i> MSP Plan
+            </button>
+          </li>
+        </ul>
+        
+        <div class="tab-content" id="workActivityTabsContent">
+          <div class="tab-pane fade show active" id="currentWork" role="tabpanel" aria-labelledby="currentWork-tab">
+            <div class="card border-primary shadow-sm mt-3">
+              <div class="card-header bg-primary text-white d-flex align-items-center">
+                <img src="Bootes Logo.png" alt="Bootes Logo" class="me-2" style="height: 30px; width: 30px;">
+                <h5 class="card-title mb-0"><i class="fas fa-cogs"></i> Current Work</h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted">Ongoing activities and progress updates.</p>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Foundation Work</h6>
+                    <div class="progress mb-3">
+                      <div class="progress-bar bg-primary" role="progressbar" style="width: 80%;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">80%</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Structural Work</h6>
+                    <div class="progress mb-3">
+                      <div class="progress-bar bg-success" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">60%</div>
+                    </div>
+                  </div>
+                </div>
+                <p>Advanced analytics and visualizations for daily work tracking.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="sitePlan" role="tabpanel" aria-labelledby="sitePlan-tab">
+            <div class="card border-success shadow-sm mt-3">
+              <div class="card-header bg-success text-white d-flex align-items-center">
+                <img src="Bootes Logo.png" alt="Bootes Logo" class="me-2" style="height: 30px; width: 30px;">
+                <h5 class="card-title mb-0"><i class="fas fa-map"></i> Site Plan</h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted">Detailed site layout and planning.</p>
+                <div class="text-center">
+                  <img src="https://via.placeholder.com/600x400?text=Site+Plan" alt="Site Plan" class="img-fluid rounded shadow">
+                </div>
+                <p class="mt-3">This section includes the architectural and engineering plans for the site.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="mspPlan" role="tabpanel" aria-labelledby="mspPlan-tab">
+            <div class="card border-warning shadow-sm mt-3">
+              <div class="card-header bg-warning text-dark d-flex align-items-center">
+                <img src="Bootes Logo.png" alt="Bootes Logo" class="me-2" style="height: 30px; width: 30px;">
+                <h5 class="card-title mb-0"><i class="fas fa-project-diagram"></i> MSP Plan</h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted">Master Schedule Plan for project milestones.</p>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Phase 1: Planning
+                    <span class="badge bg-primary rounded-pill">Completed</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Phase 2: Construction
+                    <span class="badge bg-success rounded-pill">In Progress</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Phase 3: Finishing
+                    <span class="badge bg-warning rounded-pill">Upcoming</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Phase 4: Handover
+                    <span class="badge bg-secondary rounded-pill">Pending</span>
+                  </li>
+                </ul>
+                <p class="mt-3">Track project phases and timelines with our MSP.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div id="workactivity" class="tab-pane fade" role="tabpanel">
-        <h2><i class="fas fa-tasks"></i> Work Activity</h2>
-        <p>Advanced analytics and visualizations for daily work tracking.</p>
+      <div id="finance" class="tab-pane fade" role="tabpanel">
+        <h2><i class="fas fa-dollar-sign"></i> Finance</h2>
+        
+        <!-- Sub-tabs for Finance -->
+        <ul class="nav nav-tabs" id="financeTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="paymentReceived-tab" data-bs-toggle="tab" data-bs-target="#paymentReceived" type="button" role="tab" aria-controls="paymentReceived" aria-selected="true">
+              <i class="fas fa-credit-card"></i> Payment Received
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="siteExpense-tab" data-bs-toggle="tab" data-bs-target="#siteExpense" type="button" role="tab" aria-controls="siteExpense" aria-selected="false">
+              <i class="fas fa-receipt"></i> Site Expense
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="pettyCash-tab" data-bs-toggle="tab" data-bs-target="#pettyCash" type="button" role="tab" aria-controls="pettyCash" aria-selected="false">
+              <i class="fas fa-wallet"></i> Petty Cash
+            </button>
+          </li>
+        </ul>
+        
+        <div class="tab-content" id="financeTabsContent">
+          <div class="tab-pane fade show active" id="paymentReceived" role="tabpanel" aria-labelledby="paymentReceived-tab">
+            <div class="card border-success shadow-sm mt-3">
+              <div class="card-header bg-success text-white d-flex align-items-center">
+                <img src="Bootes Logo.png" alt="Bootes Logo" class="me-2" style="height: 30px; width: 30px;">
+                <h5 class="card-title mb-0"><i class="fas fa-credit-card"></i> Payment Received</h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted">Track all incoming payments and invoices.</p>
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>2024-01-15</td>
+                        <td>₹ 10,00,000</td>
+                        <td>Client A</td>
+                        <td><span class="badge bg-success">Received</span></td>
+                      </tr>
+                      <tr>
+                        <td>2024-02-20</td>
+                        <td>₹ 5,00,000</td>
+                        <td>Client B</td>
+                        <td><span class="badge bg-success">Received</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="mt-3">Total Received: <strong>₹ 15,00,000</strong></p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="siteExpense" role="tabpanel" aria-labelledby="siteExpense-tab">
+            <div class="card border-warning shadow-sm mt-3">
+              <div class="card-header bg-warning text-dark d-flex align-items-center">
+                <img src="Bootes Logo.png" alt="Bootes Logo" class="me-2" style="height: 30px; width: 30px;">
+                <h5 class="card-title mb-0"><i class="fas fa-receipt"></i> Site Expense</h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted">Monitor site-related expenditures.</p>
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h6>Materials</h6>
+                        <p class="h4 text-warning">₹ 2,50,000</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h6>Labor</h6>
+                        <p class="h4 text-warning">₹ 3,00,000</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="card text-center">
+                      <div class="card-body">
+                        <h6>Equipment</h6>
+                        <p class="h4 text-warning">₹ 1,50,000</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="mt-3">Total Site Expenses: <strong>₹ 7,00,000</strong></p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="pettyCash" role="tabpanel" aria-labelledby="pettyCash-tab">
+            <div class="card border-info shadow-sm mt-3">
+              <div class="card-header bg-info text-white d-flex align-items-center">
+                <img src="Bootes Logo.png" alt="Bootes Logo" class="me-2" style="height: 30px; width: 30px;">
+                <h5 class="card-title mb-0"><i class="fas fa-wallet"></i> Petty Cash</h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted">Small expenses and reimbursements.</p>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> Petty cash balance: <strong>₹ 25,000</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between">
+                    Stationery <span>₹ 500</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between">
+                    Transportation <span>₹ 1,200</span>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between">
+                    Miscellaneous <span>₹ 300</span>
+                  </li>
+                </ul>
+                <p class="mt-3">Recent transactions and approvals.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="manpower" class="tab-pane fade" role="tabpanel">
@@ -757,21 +1163,31 @@
        NAV LINK: switching tabs
        ------------------------- */
     function activateTab(tabId, clickedLink) {
-      navLinks.forEach(a => {
-        a.classList.remove('active');
-        a.setAttribute('aria-selected', 'false');
-      });
-      if (clickedLink) {
-        clickedLink.classList.add('active');
-        clickedLink.setAttribute('aria-selected', 'true');
-      }
-      tabPanes.forEach(p => {
-        p.classList.remove('show', 'active');
-      });
-      const target = document.getElementById(tabId);
-      if (target) {
-        target.classList.add('show', 'active');
-      }
+      // Show loading overlay
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      loadingOverlay.classList.add('show');
+
+      // Simulate refresh delay
+      setTimeout(() => {
+        navLinks.forEach(a => {
+          a.classList.remove('active');
+          a.setAttribute('aria-selected', 'false');
+        });
+        if (clickedLink) {
+          clickedLink.classList.add('active');
+          clickedLink.setAttribute('aria-selected', 'true');
+        }
+        tabPanes.forEach(p => {
+          p.classList.remove('show', 'active');
+        });
+        const target = document.getElementById(tabId);
+        if (target) {
+          target.classList.add('show', 'active');
+        }
+
+        // Hide loading overlay
+        loadingOverlay.classList.remove('show');
+      }, 800); // 800ms delay for the refresh effect
     }
 
     navLinks.forEach(link => {
@@ -827,10 +1243,32 @@
     /* -------------------------
        PROJECT SELECT: only update HERO
        ------------------------- */
+    const projectFullNames = {
+      'GDLV': 'Government District Library Varanasi',
+      'HKD': 'Hotel Kapasheda',
+      'HIH': 'Haryana Habitat Centre Panchkula',
+      'B-47': 'B-47',
+      'SLH': 'Lete Hunuman Mandir',
+      'RWH': 'Rewari Ware House',
+      'RSTF': 'Rashmi Sharma Tele Films',
+      'JEX': 'Jhansi Exhibition Centre',
+      'SBGM': 'Geeta Meuseum HR',
+      'VRI': 'Vrindavan Residence',
+      'JANPURAEXT': 'Janpura Extension',
+      'NBCCARAVAL': 'NBCC Aravali Apartments'
+    };
+
     projectSelect.addEventListener('change', (e) => {
       const pr = e.target.value;
-      heroTitle.textContent = `Welcome to ${pr} Project`;
+      heroTitle.textContent = `Welcome to ${projectFullNames[pr] || pr}`;
       // Note: We intentionally DO NOT update tab headings here so they stay static
+
+      // Refresh the current active tab to simulate loading new project data
+      const activeLink = document.querySelector('.nav-main a.active');
+      if (activeLink) {
+        const currentTab = activeLink.getAttribute('data-tab');
+        activateTab(currentTab, activeLink);
+      }
     });
 
     /* -------------------------
@@ -852,6 +1290,25 @@
         darkIcon.classList.remove('fa-moon'); darkIcon.classList.add('fa-sun');
       }
     })();
+
+    /* -------------------------
+       LOGOUT BUTTON
+       ------------------------- */
+    const logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('userName');
+      window.location.href = 'login-register-form.html';
+    });
+
+    /* -------------------------
+       USER NAME DISPLAY
+       ------------------------- */
+    const userName = localStorage.getItem('userName') || 'User';
+    document.querySelector('.user-info p').textContent = `Welcome, ${userName}`;
+
+    // Set initial hero title based on selected project
+    const initialPr = projectSelect.value;
+    heroTitle.textContent = `Welcome to ${projectFullNames[initialPr] || initialPr}`;
 
     
   </script>
