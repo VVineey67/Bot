@@ -534,7 +534,6 @@
     </div>
 
     <div class="project-selector">
-   
       <select id="projectSelect" aria-label="Search Site">
         <option value="">Search Site </option>
         <option>GDLV</option>
@@ -552,12 +551,11 @@
       </select>
     </div>
 
+
     <nav class="nav-main" aria-label="Primary">
       <ul>
-        <li><a href="#" class="active" data-tab="home" role="button" aria-controls="home"
-            aria-selected="true"><i class="fas fa-home"></i><span>Home</span></a></li>
-        <li><a href="#" data-tab="projectinfo" role="button" aria-controls="projectinfo"
-            aria-selected="false"><i class="fas fa-info-circle"></i><span>Project Info</span></a></li>
+        <li><a href="#" class="active" data-tab="projectinfo" role="button" aria-controls="projectinfo"
+            aria-selected="true"><i class="fas fa-info-circle"></i><span>Project Info</span></a></li>
         <li><a href="#" data-tab="workactivity" role="button" aria-controls="workactivity"><i
               class="fas fa-tasks"></i><span>Work Activity</span></a></li>
         <li><a href="#" data-tab="finance" role="button" aria-controls="finance"><i
@@ -593,18 +591,15 @@
   </button>
 
   <main id="mainContent" class="main-content">
+    <section class="dashboard-hero" data-aos="fade-down">
+      <h1 id="heroTitle">Welcome to Goverment Distict Library Varanasi </h1>
+    </section>
+
     <div class="tab-content">
       <div class="loading-overlay" id="loadingOverlay">
         <div class="refresh-spinner"></div>
       </div>
-      <div id="home" class="tab-pane show active" role="tabpanel">
-       
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <h3 class="alert-heading"><i class="fas fa-building me-2"></i>Welcome to Bootes Impex Tech Ltd</h3>
-        
-        </div>
-      </div>
-      <div id="projectinfo" class="tab-pane fade" role="tabpanel">
+      <div id="projectinfo" class="tab-pane show active" role="tabpanel">
         <h2><i class="fas fa-info-circle"></i> Project Info</h2>
         
         <!-- Sub-tabs for Project Info -->
@@ -1240,7 +1235,7 @@
     }
     initTooltips();
 
-    /* -------------------------
+   /* -------------------------
        PROJECT SELECT: only update HERO
        ------------------------- */
     const projectFullNames = {
